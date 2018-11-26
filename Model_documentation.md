@@ -32,3 +32,6 @@ Lane change is attempted only when it is required per the logic defined in the h
 
 ### The car is able to change lanes
 Lane change is already explained above.
+
+<img src="images/lane_change.png" alt="Lane Change Image" />
+
