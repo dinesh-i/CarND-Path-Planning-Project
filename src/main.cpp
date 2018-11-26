@@ -164,6 +164,15 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s, const vec
 
 }
 
+int getLaneNumber(int d){
+	int total_no_of_lanes = 3;
+	for(int lane=0; lane < total_no_of_lanes; lane++){
+		if(d < (2 + 4*lane +2) && d > (2+4*lane-2))
+			return lane;
+	}
+	return -1;
+}
+
 int main() {
   uWS::Hub h;
 
@@ -251,7 +260,9 @@ int main() {
           		car_s = end_path_s;
           	}
 
-          	bool too_close = false;
+          	int total_no_of_lanes = 3;
+          	bool cars_ahead_in_lane_are_too_close[] = {false, false, false};
+          	bool cars_behind_in_lane_are_too_close[] = {false, false, false};
 
 
           	// find ref_v to use
@@ -259,33 +270,56 @@ int main() {
           		// car is in my lane
           		float d = sensor_fusion[i][6];
 
-          		if(d < (2 + 4*lane +2) && d > (2+4*lane-2)) {
-          			double vx = sensor_fusion[i][3];
-          			double vy = sensor_fusion[i][4];
-          			double check_speed = sqrt(vx*vx + vy*vy);
-          			double check_car_s = sensor_fusion[i][5];
+				double vx = sensor_fusion[i][3];
+				double vy = sensor_fusion[i][4];
+				double check_speed = sqrt(vx*vx + vy*vy);
+				double check_car_s = sensor_fusion[i][5];
 
-          			check_car_s += ((double)prev_size*.02*check_speed); // if using previous points can project s value out
-          			// check s values greater than mine and s gap
-          			if((check_car_s > car_s) && (check_car_s - car_s) < 30) {
+				check_car_s += ((double)prev_size*.02*check_speed); // if using previous points can project s value out
+				// check s values greater than mine and s gap
+				if((check_car_s > car_s) && (check_car_s - car_s) < 30) {
 
-	  	  	  	  	  // Handle the situation where we are too close to another car in the same lesson
-	  	  	  	  	  // Possible options are to lower reference velocity, change lanes etc
-	  	  	  	  	  //ref_vel = 29.5; // miles per hour
-	  	  	  	  	  too_close = true;
+				  // Handle the situation where we are too close to another car in the same lesson
+				  // Possible options are to lower reference velocity, change lanes etc
+				  //ref_vel = 29.5; // miles per hour
+				  cars_ahead_in_lane_are_too_close[getLaneNumber(d)] = true;
+				}
+				if((check_car_s < car_s) && (car_s - check_car_s) < 30) {
 
-	  	  	  	  	  if(lane>0){
-	  	  	  	  		  lane =0;
-	  	  	  	  	  }
-  	  	  	  	  	}
+				  // Handle the situation where we are too close to another car in the same lesson
+				  // Possible options are to lower reference velocity, change lanes etc
+				  //ref_vel = 29.5; // miles per hour
+				  cars_behind_in_lane_are_too_close[getLaneNumber(d)] = true;
+				}
+          	}
+
+          	bool take_action = cars_ahead_in_lane_are_too_close[lane];
+			bool lane_changed = false;
+
+          	if(take_action){
+          		if(lane == 1){
+          			if(!cars_ahead_in_lane_are_too_close[0] && !cars_behind_in_lane_are_too_close[0]){
+          				lane = 0;
+          				lane_changed = true;
+          			}
+          			else if(!cars_ahead_in_lane_are_too_close[2] && !cars_behind_in_lane_are_too_close[2]){
+          				lane = 2;
+          				lane_changed = true;
+          			}
+          			if(!lane_changed)
+						ref_vel -= .224;
+          		}
+          		else if(lane == 0 || lane == 2) {
+          			if(!cars_ahead_in_lane_are_too_close[1] && !cars_behind_in_lane_are_too_close[1]){
+          				lane = 1;
+          				lane_changed = true;
+          			}
+          			if(!lane_changed)
+						ref_vel -= .224;
           		}
           	}
 
-
-          	if(too_close) {
-          		ref_vel -= .224;
-          	}
-          	else if(ref_vel < 49.5){
+          	if(!take_action && ref_vel < 49.5){
           		ref_vel += .224;
           	}
 
