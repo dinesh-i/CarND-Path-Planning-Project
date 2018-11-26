@@ -18,6 +18,8 @@ Most of the calculations are done using Frenet coordinates to simplify the math 
 ### The car is able to drive at least 4.32 miles without incident.
 The car is able to drive without incident for multiple laps without incident. Attached images shows the best miles and current miles without incident to be the same value. The lane change logic and acceleration change logic define between lines 296 to 324 avoids many incidents.
 
+<img src="images/second_lap.png" alt="Car In Second Lap Image" />
+
 ### The car drives according to the speed limit.
 Reference velocity of 49.5 mph is used in line 322 to 324. This ensures acceleration to never exceed this reference velocity. This reference velocity is also used in line 423 to calculate the x and corresponding y points.
 
@@ -35,3 +37,6 @@ Lane change is already explained above.
 
 <img src="images/lane_change.png" alt="Lane Change Image" />
 
+The image below shows the car in its fourth lap without any incident :)
+
+<img src="images/fourth_lap.png" alt="Car In Fourth Lap Image" />
